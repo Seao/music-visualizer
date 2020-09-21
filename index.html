@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+  <head>
+    <title>music-visualizer</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script src="./lib/url.js"></script>
+    <script src="./lib/jquery.js"></script>
+    <script src="./lib/two.js"></script>
+  </head>
+  <body>
+    <div class="scripts">
+      <script>
+        $(() => {
+          // create two instance
+          const type = /(canvas|webgl)/.test(url.type) ? url.type : 'svg'
+          const two = new Two({
+            type: Two.Types[type],
+            fullscreen: true
+          }).appendTo(document.body)
+
+          // instantiation of layers to manage overlays
+          const background = two.makeGroup()
+          const middleground = two.makeGroup()
+          const foreground = two.makeGroup()
+          
+          // create main logo
+          const color = 'rgba(255, 128, 0, 0.66)'
+          const logo = two.makeGroup()
+          const radius = two.height / 6
+          const gutter = two.height / 20
+
+          const core = two.makeCircle(0, 0, radius)
+          core.stroke = '#333';
+          core.linewidth = 15;
+          core.fill = color
+          
+          logo.core = core
+          logo.add(core)
+
+          logo.translation.set(two.width / 2, two.height / 2)
+          
+          // create logo text
+          two.makeText('Clementek', two.width / 2, two.height / 2, {
+            size: 40,
+            weight: 800,
+          })
+
+          // add logo to middleground
+          middleground.add(logo)
+
+          // render the scene
+          two
+            .bind('resize', function() {
+              logo.translation.x = two.width / 2
+              logo.translation.y = two.height / 2
+              path.translation.copy(logo.translation)
+            })
+            .play()
+        })
+      </script>
+    </div>
+  </body>
+</html>
