@@ -12,83 +12,121 @@
     <div class="scripts">
       <script>
         $(() => {
-          // create two instance
-          const type = /(canvas|webgl)/.test(url.type) ? url.type : 'svg'
-          const two = new Two({
-            type: Two.Types[type],
-            fullscreen: true
-          }).appendTo(document.body)
+          const audioContext = new AudioContext()
 
-          // instantiation of layers to manage overlays
-          const background = two.makeGroup()
-          const middleground = two.makeGroup()
-          const foreground = two.makeGroup()
-          
-          /**
-           * Creates elements composing the stamp.
-           */
-          const createStamp = (pointsAmount) => {
-            const color = '#FFF'
-            const stamp = two.makeGroup()
-            const radius = two.height / 6
-  
-            // main stamp shape
-            const core = two.makeCircle(0, 0, radius)
-            core.noStroke()
-            core.fill = color
-            core.radius = radius
+          // request access to user microphone audio
+          navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+              const input = audioContext.createMediaStreamSource(stream) // MediaStreamSourceNode
+              const analyser = audioContext.createAnalyser() // AnalyserNode
+              const scriptProcessor = audioContext.createScriptProcessor() // ScriptProcessorNode
 
-            stamp.core = core
-            stamp.add(core)
-  
-            // points adjusted to sound level
-            const points = []
-            for (var i = 0; i < pointsAmount; i++) {
-              const pct = (i + 1) / pointsAmount
-              const theta = pct * Math.PI * 2
-              const weight = 5
-              const x = (radius - weight) * Math.cos(theta)
-              const y = (radius - weight) * Math.sin(theta)
+              // set analyser configuration
+              analyser.smoothingTimeConstant = 0.3
+              analyser.fftSize = 1024
+
+              // connect the audio nodes
+              input.connect(analyser)
+              analyser.connect(scriptProcessor)
+              scriptProcessor.connect(audioContext.destination)
+
+              // create two instance
+              const type = /(canvas|webgl)/.test(url.type) ? url.type : 'svg'
+              const two = new Two({
+                type: Two.Types[type],
+                fullscreen: true
+              }).appendTo(document.body)
+
+              // instantiation of layers to manage overlays
+              const background = two.makeGroup()
+              const middleground = two.makeGroup()
+              const foreground = two.makeGroup()
               
-              const point = two.makeCircle(x, y, weight)
-              point.noStroke().fill = '#333'
-              point.x = x
-              point.y = y
+              /**
+               * Creates elements composing the stamp.
+               */
+              const createStamp = (pointsAmount) => {
+                const color = '#FFF'
+                const stamp = two.makeGroup()
+                const radius = two.height / 6
+      
+                // main stamp shape
+                const core = two.makeCircle(0, 0, radius)
+                core.noStroke()
+                core.fill = color
+                core.radius = radius
 
-              points.push(point)
-            }
+                stamp.core = core
+                stamp.add(core)
+      
+                // points adjusted to sound level
+                const points = []
+                for (var i = 0; i < pointsAmount; i++) {
+                  const pct = (i + 1) / pointsAmount
+                  const theta = pct * Math.PI * 2
+                  const weight = 5
+                  const x = (radius - weight) * Math.cos(theta)
+                  const y = (radius - weight) * Math.sin(theta)
+                  
+                  const point = two.makeCircle(x, y, weight)
+                  point.noStroke().fill = '#333'
+                  point.x = x
+                  point.y = y
 
-            return {
-              stamp, points
-            }
-          }
+                  points.push(point)
+                }
 
-          /**
-           * Translate stamp and points into the screen/.
-           */
-          const translateStamp = (stamp, points) => {
-            stamp.translation.set(two.width / 2, two.height / 2)
-            for (const point of points) {
-              point.translation.set((two.width / 2) + point.x, (two.height / 2) + point.y)
-            }
-          }
+                return {
+                  stamp, points
+                }
+              }
 
-          const granularity = 28
+              /**
+               * Translate stamp and points into the screen/.
+               */
+              const translateStamp = (stamp, points) => {
+                stamp.translation.set(two.width / 2, two.height / 2)
+                for (const point of points) {
+                  point.translation.set((two.width / 2) + point.x, (two.height / 2) + point.y)
+                }
+              }
 
-          const { stamp, points } = createStamp(granularity)
-          
-          // add stamp to middleground
-          middleground.add(stamp)
+              const granularity = 28
 
-          translateStamp(stamp, points)
+              const { stamp, points } = createStamp(granularity)
+              
+              // add stamp to middleground
+              middleground.add(stamp)
 
-          // render the scene
-          two
-            .bind('resize', function() {
               translateStamp(stamp, points)
+
+              // render the scene
+              two
+                .bind('resize', function() {
+                  translateStamp(stamp, points)
+                })
+                .play()
+
+              /**
+               * Process the audio input of the ScriptProcessorNode.
+               */
+              const processInput = (audioProcessingEvent) => {  
+                // create a new Uint8Array to store the analyser's frequencyBinCount 
+                const tempArray = new Uint8Array(analyser.frequencyBinCount)
+
+                // get the byte frequency data from our array
+                analyser.getByteFrequencyData(tempArray)
+                
+                console.log(tempArray)
+              }
+
+              // add an event handler
+              scriptProcessor.onaudioprocess = processInput
+
+            }, error => {
+              // something went wrong, or the browser does not support getUserMedia
             })
-            .play()
-        })
+        })()
       </script>
     </div>
   </body>
