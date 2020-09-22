@@ -24,55 +24,68 @@
           const middleground = two.makeGroup()
           const foreground = two.makeGroup()
           
-          // create main logo
-          const color = '#FFF'
-          const logo = two.makeGroup()
-          const radius = two.height / 6
-          const gutter = two.height / 20
+          /**
+           * Creates elements composing the stamp.
+           */
+          const createStamp = (pointsAmount) => {
+            const color = '#FFF'
+            const stamp = two.makeGroup()
+            const radius = two.height / 6
+  
+            // main stamp shape
+            const core = two.makeCircle(0, 0, radius)
+            core.noStroke()
+            core.fill = color
+            core.radius = radius
 
-          const core = two.makeCircle(0, 0, radius)
-          core.noStroke()
-          core.fill = color
-          
-          logo.core = core
-          logo.add(core)
+            stamp.core = core
+            stamp.add(core)
+  
+            // points adjusted to sound level
+            const points = []
+            for (var i = 0; i < pointsAmount; i++) {
+              const pct = (i + 1) / pointsAmount
+              const theta = pct * Math.PI * 2
+              const weight = 5
+              const x = (radius - weight) * Math.cos(theta)
+              const y = (radius - weight) * Math.sin(theta)
+              
+              const point = two.makeCircle(x, y, weight)
+              point.noStroke().fill = '#333'
+              point.x = x
+              point.y = y
 
-          logo.translation.set(two.width / 2, two.height / 2)
-          
-          // create logo text
-          two.makeText('Clementek', two.width / 2, two.height / 2, {
-            size: 40,
-            weight: 800,
-          })
+              points.push(point)
+            }
 
-          // add logo to middleground
-          middleground.add(logo)
-
-          // construct equalizer points
-          const points = []
-          const points_amount = 28;
-          
-          for (var i = 0; i < points_amount; i++) {
-            const pct = (i + 1) / points_amount
-            const theta = pct * Math.PI * 2
-            const weight = 5
-            const x = (radius - weight) * Math.cos(theta)
-            const y = (radius - weight) * Math.sin(theta)
-            
-            const point = two.makeCircle(x, y, weight)
-            point.noStroke().fill = '#333'
-
-            point.translation.set((two.width / 2) + x, (two.height / 2) + y)
-
-            points.push(point)
+            return {
+              stamp, points
+            }
           }
+
+          /**
+           * Translate stamp and points into the screen/.
+           */
+          const translateStamp = (stamp, points) => {
+            stamp.translation.set(two.width / 2, two.height / 2)
+            for (const point of points) {
+              point.translation.set((two.width / 2) + point.x, (two.height / 2) + point.y)
+            }
+          }
+
+          const granularity = 28
+
+          const { stamp, points } = createStamp(granularity)
+          
+          // add stamp to middleground
+          middleground.add(stamp)
+
+          translateStamp(stamp, points)
 
           // render the scene
           two
             .bind('resize', function() {
-              logo.translation.x = two.width / 2
-              logo.translation.y = two.height / 2
-              path.translation.copy(logo.translation)
+              translateStamp(stamp, points)
             })
             .play()
         })
