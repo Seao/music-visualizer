@@ -14,11 +14,11 @@
         $(() => {
 
           const FREQUENCIES = {
-            TOTAL: 20
+            TOTAL: 128
           }
 
           const STAMP = {
-            RADIUS: 200
+            RADIUS: 150
           }
 
           const audioContext = new AudioContext()
@@ -31,8 +31,8 @@
               const scriptProcessor = audioContext.createScriptProcessor() // ScriptProcessorNode
 
               // set analyser configuration
-              analyser.smoothingTimeConstant = 0.8
-              analyser.fftSize = 2048
+              analyser.smoothingTimeConstant = 0.4
+              analyser.fftSize = 256
 
               // connect the audio nodes
               input.connect(analyser)
@@ -84,12 +84,13 @@
               const createFrequencies = () => {
                 const frequencies = []
                 for (let i = 0; i < FREQUENCIES.TOTAL; i++) {
-                  const point = two.makeCircle(0, 0, 5)
-                  point.noStroke().fill = '#333'
+                  const line = two.makeLine(0, 0, 0, 0)
+                  line.linewidth = 5
+                  line.stroke = "rgba(0, 50, 255, 0.5)"
 
                   const frequency = two.makeGroup()
-                  frequency.point = point
-                  frequency.add(point)
+                  frequency.line = line
+                  frequency.add(line)
 
                   frequencies.push(frequency)
                 }
@@ -100,17 +101,23 @@
                * Affects a translational movement on the frequency points of the array. This method is
                * used to adjust the levels of each point according to the analyze of the audio stream.
                */
-              const translateFrequencies = (frequencies, level = 0) => {
+              const translateFrequencies = (frequencies, { level = 0, levels = [] } = {}) => {
                 frequencies.forEach((frequency, i) => {
-                  const radius = STAMP.RADIUS + level
+                  const radiusMin = STAMP.RADIUS
+                  const radiusMax = radiusMin + (levels[i] || level)
                   const pct = (i + 1) / FREQUENCIES.TOTAL
                   const theta = pct * Math.PI * 2
                   const weight = 5
 
-                  const x = (radius - weight) * Math.cos(theta)
-                  const y = (radius - weight) * Math.sin(theta)
+                  const minX = (radiusMin - weight) * Math.cos(theta)
+                  const minY = (radiusMin - weight) * Math.sin(theta)
+                  
+                  const maxX = (radiusMax - weight) * Math.cos(theta)
+                  const maxY = (radiusMax - weight) * Math.sin(theta)
 
-                  frequency.point.translation.set((two.width / 2) + x, (two.height / 2) + y)
+                  const [start, finish] = frequency.line.vertices
+                  start.set((two.width / 2) + minX, (two.height / 2) + minY)
+                  finish.set((two.width / 2) + maxX, (two.height / 2) + maxY)
                 })
               }
 
@@ -122,7 +129,8 @@
               const frequencies = createFrequencies()
               translateFrequencies(frequencies)
 
-              // add stamp to middleground
+              // add elements in layers
+              background.add(frequencies)
               middleground.add(stamp)
 
               // event handler to process audio input
@@ -132,8 +140,8 @@
 
                 // get the byte frequency data from our array
                 analyser.getByteFrequencyData(data)
-                
-                // TODO: analyze data for frequency and translate points with the values
+
+                translateFrequencies(frequencies, { levels: data })
               }
 
               // render the scene
