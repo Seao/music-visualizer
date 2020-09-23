@@ -12,8 +12,14 @@
     <div class="scripts">
       <script>
         $(() => {
-          // constants
-          const POINTS = 50
+
+          const FREQUENCIES = {
+            TOTAL: 20
+          }
+
+          const STAMP = {
+            RADIUS: 200
+          }
 
           const audioContext = new AudioContext()
 
@@ -44,40 +50,6 @@
               const background = two.makeGroup()
               const middleground = two.makeGroup()
               const foreground = two.makeGroup()
-              
-              /**
-               * Returns the coordinates of a point for a given level.
-               */
-              const getPointPosition = (index, level = 0) => {
-                const radius = level
-                const pct = (index + 1) / POINTS
-                const theta = pct * Math.PI * 2
-                const weight = 5
-
-                return {
-                  x: (radius - weight) * Math.cos(theta),
-                  y: (radius - weight) * Math.sin(theta)
-                }
-              }
-              
-              /**
-               * Affects a translational movement on the points of the array. This method is used
-               * to adjust the levels of each point according to the analyze of the audio stream.
-               */
-              const translatePoints = (points, width, height, level = 0) => {
-                points.forEach((point, i) => {
-                  const { x, y } = getPointPosition(i, point.distance + level)
-                  point.translation.set(width + x, height + y)
-                })
-              }
-
-              /**
-               * Translates stamp and its points into the screen.
-               */
-              const translateStamp = (stamp, points) => {
-                stamp.translation.set(two.width / 2, two.height / 2)
-                translatePoints(points, two.width / 2, two.height / 2)
-              }
 
               /**
                * Creates the elements composing the stamp.
@@ -85,7 +57,7 @@
               const createStamp = () => {
                 const color = '#FFF'
                 const stamp = two.makeGroup()
-                const radius = two.height / 6
+                const radius = STAMP.RADIUS
       
                 // main stamp shape
                 const core = two.makeCircle(0, 0, radius)
@@ -96,28 +68,62 @@
                 stamp.core = core
                 stamp.add(core)
       
-                // points adjusted to sound level
-                const points = []
-                for (var i = 0; i < POINTS; i++) {
-                  const { x, y } = getPointPosition(i)
-                  const point = two.makeCircle(x, y, 5)
-                  point.noStroke().fill = '#333'
-                  point.distance = stamp.core.radius
-
-                  points.push(point)
-                }
-
-                return {
-                  stamp, points
-                }
+                return stamp
               }
 
-              const { stamp, points } = createStamp()
-              
+              /**
+               * Affects a translational movement on the stamp to be centered on the screen.
+               */
+              const translateStamp = (stamp, points) => {
+                stamp.translation.set(two.width / 2, two.height / 2)
+              }
+
+              /**
+               * Creates the elements allowing to visualize frenquencies from audio input.
+               */
+              const createFrequencies = () => {
+                const frequencies = []
+                for (let i = 0; i < FREQUENCIES.TOTAL; i++) {
+                  const point = two.makeCircle(0, 0, 5)
+                  point.noStroke().fill = '#333'
+
+                  const frequency = two.makeGroup()
+                  frequency.point = point
+                  frequency.add(point)
+
+                  frequencies.push(frequency)
+                }
+                return frequencies
+              }
+
+              /**
+               * Affects a translational movement on the frequency points of the array. This method is
+               * used to adjust the levels of each point according to the analyze of the audio stream.
+               */
+              const translateFrequencies = (frequencies, level = 0) => {
+                frequencies.forEach((frequency, i) => {
+                  const radius = STAMP.RADIUS + level
+                  const pct = (i + 1) / FREQUENCIES.TOTAL
+                  const theta = pct * Math.PI * 2
+                  const weight = 5
+
+                  const x = (radius - weight) * Math.cos(theta)
+                  const y = (radius - weight) * Math.sin(theta)
+
+                  frequency.point.translation.set((two.width / 2) + x, (two.height / 2) + y)
+                })
+              }
+
+              // create and translate stamp
+              const stamp = createStamp()
+              translateStamp(stamp)
+
+              // create and translate frequencies
+              const frequencies = createFrequencies()
+              translateFrequencies(frequencies)
+
               // add stamp to middleground
               middleground.add(stamp)
-
-              translateStamp(stamp, points)
 
               // event handler to process audio input
               scriptProcessor.onaudioprocess = (audioProcessingEvent) => {  
@@ -133,7 +139,8 @@
               // render the scene
               two
                 .bind('resize', () => {
-                  translateStamp(stamp, points)
+                  translateStamp(stamp)
+                  translateFrequencies(frequencies)
                 })
                 .play()
 
