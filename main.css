@@ -1,5 +1,11 @@
 body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: url(assets/background.jpg) no-repeat center center fixed; 
-  background-color: black;
   background-size: cover;
+}
+
+.logo {
+  width: 400px;
 }
