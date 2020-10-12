@@ -16,6 +16,19 @@ $(() => {
 
   const audioContext = new AudioContext()
 
+  // background video player
+  videojs('background', {
+    autoplay: true,
+    muted: true
+  }, function onPlayerReady() {  
+    this.play()
+
+    this.on('ended', function() {
+      console.log('Ended')
+      this.play()
+    })
+  })
+
   // request access to user microphone audio
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
@@ -37,7 +50,7 @@ $(() => {
       const two = new Two({
         type: Two.Types[type],
         fullscreen: true
-      }).appendTo(document.body)
+      }).appendTo(document.getElementById('canvas'))
 
       // instantiation of layers to manage overlays
       const background = two.makeGroup()
