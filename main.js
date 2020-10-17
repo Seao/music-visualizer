@@ -1,17 +1,17 @@
 $(() => {
 
   const FREQUENCIES = {
-    TOTAL: 128,
+    TOTAL: 120,
     REDUCER: 0.8,
     BARS: {
       WIDTH: 5,
-      COLOR: '#e4863e'
+      COLOR: 'rgb(228, 134, 62)'
     }
   }
 
   const STAMP = {
-    RADIUS: 184,
-    COLOR: '#FFF'
+    RADIUS: 160,
+    SCALE: 0.4,
   }
 
   const audioContext = new AudioContext()
@@ -32,16 +32,21 @@ $(() => {
   // request access to user microphone audio
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
-      const input = audioContext.createMediaStreamSource(stream) // MediaStreamSourceNode
+      const source = audioContext.createMediaStreamSource(stream) // MediaStreamSourceNode
+      const filter = audioContext.createBiquadFilter() // FilterNode
       const analyser = audioContext.createAnalyser() // AnalyserNode
       const scriptProcessor = audioContext.createScriptProcessor() // ScriptProcessorNode
 
       // set analyser configuration
-      analyser.smoothingTimeConstant = 0.6
+      analyser.smoothingTimeConstant = 0.5
       analyser.fftSize = 256
-
+      
       // connect the audio nodes
-      input.connect(analyser)
+      source.connect(filter)
+
+      filter.connect(analyser)
+      filter.type = 'allpass'
+
       analyser.connect(scriptProcessor)
       scriptProcessor.connect(audioContext.destination)
 
@@ -64,10 +69,8 @@ $(() => {
         const stamp = two.makeGroup()
 
         // main stamp shape
-        const core = two.makeCircle(0, 0, STAMP.RADIUS)
-        core.noStroke()
-        core.noFill()
-        core.radius = STAMP.RADIUS
+        const core = two.makeSprite('https://raw.githubusercontent.com/Seao/music-visualizer/development/assets/clementek.png')
+        core.scale = 0.4
 
         stamp.core = core
         stamp.add(core)
@@ -78,8 +81,9 @@ $(() => {
       /**
        * Affects a translational movement on the stamp to be centered on the screen.
        */
-      const translateStamp = (stamp, points) => {
+      const translateStamp = (stamp, scale = STAMP.SCALE) => {
         stamp.translation.set(two.width / 2, two.height / 2)
+        stamp.core.scale = scale
       }
 
       /**
@@ -154,17 +158,25 @@ $(() => {
       middleground.add(stamp)
 
       // event handler to process audio input
-      scriptProcessor.onaudioprocess = (audioProcessingEvent) => {  
+      scriptProcessor.onaudioprocess = (audioProcessingEvent) => {
         // create a new Uint8Array to store the analyser's frequencyBinCount 
         const data = new Uint8Array(analyser.frequencyBinCount)
 
         // get the byte frequency data from our array
         analyser.getByteFrequencyData(data)
 
-        translateFrequencies(frequencies, {
-          levels: data
-            .map((level) => level * FREQUENCIES.REDUCER)
-        })
+        const { levels, total } = data
+          .reduce((acc, level) => {
+            const levelReduced = level * FREQUENCIES.REDUCER
+            acc.levels.push(levelReduced)
+            acc.total += levelReduced
+            return acc
+          }, { levels: [], total: 0 })
+
+        // const rate = (total * 0.6) / 15000
+
+        translateFrequencies(frequencies, { levels })
+        // translateStamp(stamp, rate)
       }
 
       // render the scene
