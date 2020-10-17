@@ -2,7 +2,7 @@ $(() => {
 
   const FREQUENCIES = {
     TOTAL: 120,
-    REDUCER: 0.8,
+    REDUCER: 0.7,
     BARS: {
       WIDTH: 5,
       COLOR: 'rgb(228, 134, 62)'
@@ -10,7 +10,7 @@ $(() => {
   }
 
   const STAMP = {
-    RADIUS: 160,
+    RADIUS: 150,
     SCALE: 0.4,
   }
 
@@ -69,7 +69,7 @@ $(() => {
         const stamp = two.makeGroup()
 
         // main stamp shape
-        const core = two.makeSprite('https://raw.githubusercontent.com/Seao/music-visualizer/development/assets/clementek.png')
+        const core = two.makeSprite('https://raw.githubusercontent.com/Seao/music-visualizer/development/assets/azeria.png')
         core.scale = 0.4
 
         stamp.core = core
@@ -85,6 +85,28 @@ $(() => {
         stamp.translation.set(two.width / 2, two.height / 2)
         stamp.core.scale = scale
       }
+
+      // cascade execution of synchronous functions
+      const flow = (...fns) => fns.reduceRight((acc, fn) => (...x) => acc = fn(...x))
+
+      // Creates a mapping function that projects its input from a given range to another
+      const remap = ([i0, i1], [o0, o1]) => i1 - i0 === 0
+        ? () => NaN
+        : (input) => (input - i0) / (i1 - i0) * (o1 - o0) + o0
+
+      // Creates a clamping function that returns the closest value to the input within the given boundaries
+      const clamp = (bounds) => (input) => {
+        const [min, max] = bounds.slice().sort()
+        return Math.max(min, Math.min(input, max))
+      }
+
+      const levelToScale = ({
+        minLevel, maxLevel, minScale, maxScale,
+      }) => flow(
+        remap([minLevel, maxLevel], [minScale, maxScale]),
+        Math.round,
+        clamp([minScale, maxScale])
+      )
 
       /**
        * Creates the elements allowing to visualize frenquencies from audio input.
@@ -167,16 +189,16 @@ $(() => {
 
         const { levels, total } = data
           .reduce((acc, level) => {
-            const levelReduced = level * FREQUENCIES.REDUCER
+            const levelReduced = Math.pow(level * FREQUENCIES.REDUCER, 1.1)
             acc.levels.push(levelReduced)
             acc.total += levelReduced
             return acc
           }, { levels: [], total: 0 })
 
-        // const rate = (total * 0.6) / 15000
+        const rate = levelToScale({ minLevel: 0, maxLevel: 18000, minScale: 0.3, maxScale: 0.55 })(total)
 
         translateFrequencies(frequencies, { levels })
-        // translateStamp(stamp, rate)
+        translateStamp(stamp, rate)
       }
 
       // render the scene
