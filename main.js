@@ -24,7 +24,6 @@ $(() => {
     this.play()
 
     this.on('ended', function() {
-      console.log('Ended')
       this.play()
     })
   })
