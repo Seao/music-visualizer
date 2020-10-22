@@ -1,0 +1,24 @@
+{
+  "name": "music-visualizer",
+  "version": "1.0.0",
+  "description": "Uses device mic to analyse sound and transform it into graphics",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Seao/music-visualizer.git"
+  },
+  "keywords": [
+    "music",
+    "visualizer",
+    "microphone",
+    "web audio api"
+  ],
+  "author": "Aurélien Wolz",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Seao/music-visualizer/issues"
+  },
+  "homepage": "https://github.com/Seao/music-visualizer#readme",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

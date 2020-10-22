@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <title>music-visualizer</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="main.css">
+    <!-- two.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/two.js/0.7.0/two.min.js" integrity="sha512-R/rIc7wP79QeUCTWfzz31otkUj5TS/gMeREfTiVQAus+DPXhpBsPYtz0MTnCIgC21S3gFKw9kopx0vNo/WTZTw==" crossorigin="anonymous"></script>
+    <!-- video.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.10.1/video.min.js" integrity="sha512-mWGxTgz5pSPONnZgJLglBa6k5gdfJTeA8RVH+75NOt+3B7+bRNPmWKNIsVgE5vTTdF6ts55Pweue24UcjBploA==" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.10.1/video-js.min.css" integrity="sha512-H0fVyBVJO8AQkwE782SHzeAvFZ9EdR3SkWrM0J+LeL0eRDUm4OdBNl1IRtmZflzVwOAJ7a3Ft8AfNw1G0MPqzQ==" crossorigin="anonymous" />
+    <!-- dat-gui -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js" integrity="sha512-LF8ZB1iTwi4Qvkm4pekHG4a437Y9Af5ZuwbnW4GTbAWQeR2E4KW8WF+xH8b9psevV7wIlDMx1MH9YfPqgKhA/Q==" crossorigin="anonymous"></script>
+    <!-- fonts -->
+    <link href='http://fonts.googleapis.com/css?family=Raleway:400,100,200,300,500,600,800,700,900' rel='stylesheet' type='text/css'>
+  </head>
+  <body>
+    <video
+      id="background"
+      preload="auto"
+    >
+      <source src="./assets/tunnel_gold.mp4" type="video/mp4"></source>
+      <p class="vjs-no-js">
+        To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="https://videojs.com/html5-video-support/" target="_blank"> supports HTML5 video</a>
+      </p>
+    </video>
+
+    <div id="canvas"></div>
+    
+    <script src="main.js"></script>
+  </body>
+</html>
