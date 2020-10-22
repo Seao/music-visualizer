@@ -13,6 +13,10 @@ Hosted on github - [demo](https://seao.github.io/music-visualizer/index.html) ðŸ
 
 Tested on Firefox 81.0.2 (64 bits)
 
+## Changelog
+
+Changes are documented in this [changelog](./CHANGELOG.md) file.
+
 ## License
 
 music-visualizer is licensed under the MIT License.
