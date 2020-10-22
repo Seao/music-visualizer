@@ -1,6 +1,6 @@
 {
   "name": "music-visualizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Uses device mic to analyse sound and transform it into graphics",
   "repository": {
     "type": "git",
